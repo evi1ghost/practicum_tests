@@ -1,3 +1,4 @@
+import inspect
 import pytest
 
 
@@ -7,6 +8,18 @@ def test_precode_variables_exist(missing_variables):
     assert not missing_variables, (
         f'Пожалуйста, используйте {pluralise} {", ".join(missing_variables)} '
         'из прекода.'
+    )
+
+
+def test_contact_init_not_changed(precode):
+    """Test if the __init__ method of the Contact class has changed."""
+    contact_parameters = set(
+        inspect.signature(precode.Contact).parameters.keys()
+    )
+    expected_parameters = {'name', 'phone', 'birthday', 'address'}
+    assert not expected_parameters.difference(contact_parameters), (
+        'Метод __init__ класса Contact должен принимать на вход следующие '
+        f'параметры: self, {", ".join(expected_parameters)}.'
     )
 
 
@@ -37,23 +50,20 @@ def test_stdout(expected_output, student_output):
     """Test if student's output equal to expected."""
     if student_output:
         student_lines = student_output.strip().split('\n')
-        try:
-            for line_num, expected_line in enumerate(
-                expected_output.strip().split('\n'), 1
+        expected_lines = expected_output.strip().split('\n')
+        if len(expected_lines) == len(student_lines):
+            for line_num, (expected_line, student_line) in enumerate(
+                zip(expected_lines, student_lines), 1
             ):
-                assert expected_line == student_lines[line_num - 1], (
+                assert expected_line == student_line, (
                     'Результат не соответствует ожидаемому.\n'
                     f'Проверьте {line_num} строку результата '
                     'выполнения кода. Она должная выглядеть '
                     'следующим образом:\n'
                     f'{expected_line}'
                 )
-        except IndexError:
-            assert False, 'Результат не соответствует ожидаемому.'
     assert expected_output == student_output, (
-        'Результат не соответствует ожидаемому.'
+        'Результат не соответствует ожидаемому:\n'
+        f'Ваш вывод:\n {student_output}\n'
+        f'Ожидаемый вывод:\n {expected_output}'
     )
-
-
-if __name__ == '__main__':
-    pytest.main()
